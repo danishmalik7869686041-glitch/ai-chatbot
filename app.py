@@ -25,7 +25,13 @@ def home():
 
 @app.route("/chat", methods=["POST"])
 def chat():
-    data = request.get_json()
+    data = request.get_json(silent=True)
+
+    if not data:
+        return jsonify({
+            "error": "Invalid request."
+        }), 400
+
     user_message = data.get("message", "").strip()
 
     if not user_message:
@@ -39,16 +45,28 @@ def chat():
             contents=user_message,
         )
 
+        if response and response.text:
+            return jsonify({
+                "response": response.text
+            })
+
         return jsonify({
-            "response": response.text
-        })
+            "error": "Gemini returned an empty response."
+        }), 502
 
     except Exception as e:
-        print("AI Error:", e)
+        print("Gemini Error:", e)
+
+        error_text = str(e)
+
+        if "429" in error_text or "RESOURCE_EXHAUSTED" in error_text:
+            return jsonify({
+                "error": "Gemini daily free quota is currently exhausted. Please try again after the quota resets."
+            }), 429
 
         return jsonify({
-            "error": "Sorry, AI response nahi aa raha. Please try again."
-        }), 500
+            "error": "Gemini is temporarily unavailable. Please try again later."
+        }), 503
 
 
 def open_browser():

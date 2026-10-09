@@ -27,7 +27,7 @@ function useSuggestion(text) {
     input.focus();
 }
 
-form.addEventListener("submit", async (event) => {
+form.addEventListener("submit", async function (event) {
     event.preventDefault();
 
     const message = input.value.trim();
@@ -55,7 +55,7 @@ form.addEventListener("submit", async (event) => {
 
         const data = await response.json();
 
-        if (data.response) {
+        if (response.ok && data.response) {
             addMessage(data.response, "bot");
         } else {
             addMessage(
@@ -63,13 +63,15 @@ form.addEventListener("submit", async (event) => {
                 "bot"
             );
         }
+
     } catch (error) {
-        console.error(error);
+        console.error("Chat error:", error);
 
         addMessage(
             "Unable to connect to the AI. Please try again.",
             "bot"
         );
+
     } finally {
         sendButton.disabled = false;
         sendButton.textContent = "Send ➤";
